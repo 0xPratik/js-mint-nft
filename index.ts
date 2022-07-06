@@ -1,5 +1,6 @@
 import { Wallet } from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
+import * as beet from "@metaplex-foundation/beet";
 import {
   TOKEN_PROGRAM_ID,
   MINT_SIZE,
@@ -11,6 +12,11 @@ import {
 import {
   createCreateMasterEditionV3Instruction,
   createCreateMetadataAccountV2Instruction,
+  UseMethod,
+  Uses,
+  createUtilizeInstruction,
+  UtilizeInstructionAccounts,
+  UtilizeInstructionArgs,
   DataV2,
 } from "@metaplex-foundation/mpl-token-metadata";
 const fs = require("fs");
@@ -28,9 +34,11 @@ const fs = require("fs");
     const wallet = new Wallet(keypair);
     console.log("Connected Wallet", wallet.publicKey.toString());
 
-    const endpoint = "https://metaplex.devnet.rpcpool.com/";
+    const endpoint = "http://127.0.0.1:8899";
     const connection = new anchor.web3.Connection(endpoint);
-    const { blockhash } = await connection.getLatestBlockhash("finalized");
+    console.log("Connected to", connection);
+    const { blockhash } = await connection.getRecentBlockhash();
+    console.log(blockhash);
     const transaction = new anchor.web3.Transaction({
       recentBlockhash: blockhash,
       feePayer: wallet.publicKey,
@@ -101,6 +109,18 @@ const fs = require("fs");
       TOKEN_METADATA_PROGRAM_ID
     );
 
+    // enum UseMethod {
+    //   Burn = 0,
+    //   Multiple = 1,
+    //   Single = 2,
+    // }
+
+    // type Uses = {
+    //   useMethod: UseMethod;
+    //   remaining: beet.bignum;
+    //   total: beet.bignum;
+    // };
+
     const data: DataV2 = {
       name: "Metaplex",
       symbol: "PAT",
@@ -114,7 +134,11 @@ const fs = require("fs");
         },
       ],
       collection: null,
-      uses: null,
+      uses: {
+        useMethod: UseMethod.Burn,
+        remaining: new anchor.BN(5),
+        total: new anchor.BN(5),
+      },
     };
 
     const args = {
